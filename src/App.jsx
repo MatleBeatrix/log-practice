@@ -19,9 +19,13 @@ function App() {
           'Authorization': authUsername + '&&&' + authPassword
         }
       })
+      /*
       localStorage.setItem("user", authUsername);
       localStorage.setItem("pw", authPassword);
+      */
+      localStorage.setItem("sessionID", response.data);
       setPage("todo");
+      //console.log(response.data);
     }
     catch (e) {
       alert("wrong username/password");
@@ -32,14 +36,21 @@ function App() {
     try {
       const response = await axios.post('http://localhost:4000/api/todo', 
       {msg: todo},
-      {headers: {"Authorization": authUsername+'&&&'+authPassword}}
+      //{headers: {"Authorization": authUsername+'&&&'+authPassword}}
+      {headers: {"Authorization": localStorage.getItem("sessionID")}}
       );
       setTodo("");
       alert('todo created');
     }
     catch(e) {
-      alert('error');
+      //alert('error');
+      if(e.response.status === 401){
+        alert('Your session has expired')
+        setPage('login')
+        localStorage.removeItem('sessionID')
+      }
     }
+
   }
 
   const signup = async () => {
@@ -64,15 +75,18 @@ function App() {
       if (error.response.status === 409){
         alert('username taken');
       }
+
     }
 
   }
 
   useEffect(() => {
-    if (localStorage.getItem("user")) {
+    if (localStorage.getItem("sessionID")) {
       setPage("todo");
+      /*
       setAuthUsername(localStorage.getItem("user"));
       setAuthPassword(localStorage.getItem("pw"));
+      */
     }
   }, [])
 
@@ -98,10 +112,12 @@ function App() {
       {page === "log" &&
       <div className='card'>
         <h1>Login</h1>
+        <label for='username'>Username</label>
         <input type="text" value={authUsername} onChange={(e) => setAuthUsername(e.target.value)} placeholder="Username"/>
+        <label for='password'>Password</label>
         <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Password"/>
-        <button onClick={(e) => setPage("reg")}>Back to registration</button>
         <button onClick={(e) => login()}>Login</button>
+        <button onClick={(e) => setPage("reg")}>Back to registration</button>
       </div>
       }
     </div>
